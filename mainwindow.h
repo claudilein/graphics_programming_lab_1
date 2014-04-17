@@ -20,6 +20,8 @@ public slots:
 
 private:
     QMenuBar *menuBar;
+    QToolBar *toolBar;
+    QStatusBar *statusBar;
 
 
     // == FILE MENU == //

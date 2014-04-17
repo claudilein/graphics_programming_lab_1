@@ -1,13 +1,20 @@
 #include "mainwindow.h"
 #include <QMessageBox>
+#include <QToolBar>
+#include <QStatusBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
 
     menuBar = new QMenuBar();
+    setMenuBar(menuBar);
 
+    toolBar = new QToolBar();
+    addToolBar(toolBar);
 
+    statusBar = new QStatusBar();
+    setStatusBar(statusBar);
 
     // == FILE MENU == //
 
@@ -62,11 +69,18 @@ MainWindow::MainWindow(QWidget *parent)
     // == ABOUT ACTION == //
 
     aboutAction = new QAction("&About", menuBar);
-    menuBar->addAction(aboutAction);
-
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(showAboutBox()));
 
-    setMenuBar(menuBar);
+    menuBar->addAction(aboutAction);
+
+    // == TOOL BAR == //
+
+    toolBar->addAction(noShadingAction);
+    toolBar->addAction(flatShadingAction);
+    toolBar->addAction(gouraudShadingAction);
+    toolBar->addAction(phongShadingAction);
+
+
 }
 
 
@@ -84,6 +98,8 @@ void MainWindow::showAboutBox()
 MainWindow::~MainWindow()
 {
     delete menuBar;
+    delete toolBar;
+    delete statusBar;
     delete fileMenu;
     delete shadingMenu;
     delete shadingGroup;
