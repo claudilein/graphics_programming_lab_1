@@ -5,7 +5,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
-//#include <QtGui>
+#include <glwidget.h>
 
 class MainWindow : public QMainWindow
 {
@@ -22,6 +22,7 @@ private:
     QMenuBar *menuBar;
     QToolBar *toolBar;
     QStatusBar *statusBar;
+    GLWidget *glWidget;
 
 
     // == FILE MENU == //

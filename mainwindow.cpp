@@ -16,6 +16,9 @@ MainWindow::MainWindow(QWidget *parent)
     statusBar = new QStatusBar();
     setStatusBar(statusBar);
 
+    glWidget = new GLWidget();
+    setCentralWidget(glWidget);
+
     // == FILE MENU == //
 
     fileMenu = new QMenu("&File");
@@ -37,22 +40,26 @@ MainWindow::MainWindow(QWidget *parent)
     noShadingAction->setShortcut(tr("Ctrl+1"));
     noShadingAction->setCheckable(true);
     noShadingAction->setIcon(QIcon(":/img/wireframe.png"));
+    connect(noShadingAction, SIGNAL(triggered()), glWidget, SLOT(setWireframeShading()));
 
     flatShadingAction = new QAction("Fla&t", shadingMenu);
     flatShadingAction->setShortcut(tr("Ctrl+2"));
     flatShadingAction->setCheckable(true);
     flatShadingAction->setChecked(true);
     flatShadingAction->setIcon(QIcon(":/img/flat.png"));
+    connect(flatShadingAction, SIGNAL(triggered()), glWidget, SLOT(setFlatShading()));
 
     gouraudShadingAction = new QAction("&Gouraud", shadingMenu);
     gouraudShadingAction->setShortcut(tr("Ctrl+3"));
     gouraudShadingAction->setCheckable(true);
     gouraudShadingAction->setIcon(QIcon(":/img/gouraud.png"));
+    connect(gouraudShadingAction, SIGNAL(triggered()), glWidget, SLOT(setGouraudShading()));
 
     phongShadingAction = new QAction("&Phong", shadingMenu);
     phongShadingAction->setShortcut(tr("Ctrl+4"));
     phongShadingAction->setCheckable(true);
     phongShadingAction->setIcon(QIcon(":/img/phong.png"));
+    connect(phongShadingAction, SIGNAL(triggered()), glWidget, SLOT(setPhongShading()));
 
     shadingGroup->addAction(noShadingAction);
     shadingGroup->addAction(flatShadingAction);
@@ -80,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent)
     toolBar->addAction(gouraudShadingAction);
     toolBar->addAction(phongShadingAction);
 
+//    setFixedSize(640, 480);
 
 }
 
@@ -110,4 +118,6 @@ MainWindow::~MainWindow()
     delete gouraudShadingAction;
     delete phongShadingAction;
     delete aboutAction;
+
+    delete glWidget;
 }
