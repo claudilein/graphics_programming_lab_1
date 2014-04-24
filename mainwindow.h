@@ -5,6 +5,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include <QSlider>
 #include <glwidget.h>
 
 class MainWindow : public QMainWindow
@@ -21,6 +22,7 @@ public slots:
 private:
     QMenuBar *menuBar;
     QToolBar *toolBar;
+    QSlider *slider;
     QStatusBar *statusBar;
     GLWidget *glWidget;
 

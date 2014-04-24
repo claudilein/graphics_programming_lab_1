@@ -1,11 +1,54 @@
 #include "glwidget.h"
 #include "GL/glu.h"
-#include <QMessageBox>
 
 GLWidget::GLWidget(QWidget *parent) :
     QGLWidget(parent)
 {
+    tesselationSteps = 0;
 
+    // set cube vertices
+
+//    vertices.push_back();
+
+//    glVertex3f(-0.5f, -0.5f, +0.5f);
+//    glVertex3f(+0.5f, -0.5f, +0.5f);
+//    glVertex3f(+0.5f, +0.5f, +0.5f);
+//    glVertex3f(-0.5f, +0.5f, +0.5f);
+
+//    // right
+//    glColor3f(0, 1, 0);
+//    glVertex3f(+0.5f, -0.5f, +0.5f);
+//    glVertex3f(+0.5f, -0.5f, -0.5f);
+//    glVertex3f(+0.5f, +0.5f, -0.5f);
+//    glVertex3f(+0.5f, +0.5f, +0.5f);
+
+//    // back
+//    glColor3f(1, 1, 0);
+//    glVertex3f(+0.5f, -0.5f, -0.5f);
+//    glVertex3f(-0.5f, -0.5f, -0.5f);
+//    glVertex3f(-0.5f, +0.5f, -0.5f);
+//    glVertex3f(+0.5f, +0.5f, -0.5f);
+
+//    // left
+//    glColor3f(0, 1, 1);
+//    glVertex3f(-0.5f, -0.5f, -0.5f);
+//    glVertex3f(-0.5f, -0.5f, +0.5f);
+//    glVertex3f(-0.5f, +0.5f, +0.5f);
+//    glVertex3f(-0.5f, +0.5f, -0.5f);
+
+//    // top
+//    glColor3f(1, 0, 0);
+//    glVertex3f(-0.5f, +0.5f, +0.5f);
+//    glVertex3f(+0.5f, +0.5f, +0.5f);
+//    glVertex3f(+0.5f, +0.5f, -0.5f);
+//    glVertex3f(-0.5f, +0.5f, -0.5f);
+
+//    // bottom
+//    glColor3f(1, 0, 1);
+//    glVertex3f(-0.5f, -0.5f, +0.5f);
+//    glVertex3f(+0.5f, -0.5f, +0.5f);
+//    glVertex3f(+0.5f, -0.5f, -0.5f);
+//    glVertex3f(-0.5f, -0.5f, -0.5f);
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -22,6 +65,7 @@ void GLWidget::initializeGL()
 {
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
 
     // init shading model to flat shading
     glShadeModel(GL_FLAT);
@@ -30,7 +74,7 @@ void GLWidget::initializeGL()
     glEnable(GL_LIGHTING);
 
     // TODO directional lightsource (0.0f) or not?
-    float positionLight0[] = {0.5f, 0.0f, 2.0f, 1.0f};
+    float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
     glEnable(GL_LIGHT0);
 
@@ -45,6 +89,23 @@ void GLWidget::paintGL()
     // draw a cube
 
     glBegin(GL_QUADS);
+
+    // set material properties for the cube
+    float diffuseReflection[4] = {0.5, 0.5, 0.5, 1.0};
+    float specularReflection[4] = {0.7, 0.3, 0.7, 1.0};
+    int shininess = 66.0f;
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuseReflection);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
+    glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+
+    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR);
+
+    for (int i = 0; i < tesselationSteps; i++) {
+        // interpoliere zwischen jeweiligen Eckpunkten
+
+    }
 
     // front
     glColor3f(0, 0, 1);
@@ -120,26 +181,33 @@ void GLWidget::wheelEvent(QWheelEvent *event)
 void GLWidget::setWireframeShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    paintGL();
+    updateGL();
 }
 
 void GLWidget::setFlatShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glShadeModel(GL_FLAT);
-    paintGL();
+    updateGL();
 }
 
 void GLWidget::setGouraudShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glShadeModel(GL_SMOOTH);
-    paintGL();
+    updateGL();
 }
 
 void GLWidget::setPhongShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glShadeModel(GL_SMOOTH);
-    paintGL();
+    updateGL();
+}
+
+// range of t: [0, 20] (subdivision steps)
+void GLWidget::setTesselation(int t)
+{
+    tesselationSteps = t;
+    updateGL();
 }

@@ -19,6 +19,12 @@ MainWindow::MainWindow(QWidget *parent)
     glWidget = new GLWidget();
     setCentralWidget(glWidget);
 
+
+    slider = new QSlider();
+    slider->setOrientation(Qt::Horizontal);
+    slider->setFixedWidth(80);
+    connect(slider, SIGNAL(valueChanged(int)), glWidget, SLOT(setTesselation(int)));
+
     // == FILE MENU == //
 
     fileMenu = new QMenu("&File");
@@ -86,8 +92,8 @@ MainWindow::MainWindow(QWidget *parent)
     toolBar->addAction(flatShadingAction);
     toolBar->addAction(gouraudShadingAction);
     toolBar->addAction(phongShadingAction);
+    toolBar->addWidget(slider);
 
-//    setFixedSize(640, 480);
 
 }
 
@@ -120,4 +126,5 @@ MainWindow::~MainWindow()
     delete aboutAction;
 
     delete glWidget;
+    delete slider;
 }

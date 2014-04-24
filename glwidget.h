@@ -22,6 +22,8 @@ public slots:
     void setGouraudShading();
     void setPhongShading();
 
+    void setTesselation(int t);
+
 protected:
     void initializeGL();
     void paintGL();
@@ -29,6 +31,11 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+
+private:
+    int tesselationSteps;
+    std::vector<std::vector<float> > vertices;
+
 };
 
 #endif // GLWIDGET_H
