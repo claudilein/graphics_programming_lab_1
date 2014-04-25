@@ -2,6 +2,9 @@
 #include "GL/glu.h"
 #include <iostream>
 #include <math.h>
+#include <QPointF>
+#include <QVector3D>
+#include <QMatrix4x4>
 
 using namespace std;
 
@@ -157,13 +160,92 @@ void GLWidget::resizeGL(int width, int height)
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
-{}
+{
+    lastVector = mapPointToTrackball(event->x(), event->y());
+    currentRotation = QQuaternion (0, 0, 0, 1);
+
+    updateGL();
+}
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
-{}
+{
+    QVector3D newVector = mapPointToTrackball(event->x(), event->y());
+
+    cout << "x: " << newVector.x() << ", y: " << newVector.y() << ", z: " << newVector.z() <<  endl;
+
+    // calculate direction to last point and construct vector that is perpendicular to the plane spanned by the two vectors
+    QVector3D normal;
+    normal = QVector3D::normal(newVector, lastVector);
+
+    // convert the distance between the two points to a number of degrees for the rotation
+    float degrees = acosf(QVector3D::dotProduct(newVector, lastVector)) / 180;
+
+    cout << "degrees: " << degrees << endl;
+
+    // create quaternion from the axis and the angle
+    QQuaternion rotation (degrees, normal);
+
+    // multiply with previous quaternion to add rotations
+    rotation = rotation * currentRotation;
+    currentRotation = rotation;
+
+    // when mouse button released: transform quaternion to matrix and apply to modelview matrix
+    QMatrix4x4 rotationMatrix;
+    rotationMatrix.rotate(rotation);
+
+//    float currentModelView[16];
+//    glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(2, 2, 3, 0, 0, 0, 0, 1, 0);
+    glMultMatrixf(rotationMatrix.constData());
+
+    // set this point as last point
+    lastVector = newVector;
+
+    updateGL();
+}
 
 void GLWidget::wheelEvent(QWheelEvent *event)
-{}
+{
+    // vertical rotation in wheel degrees
+    int degrees = event->angleDelta().y();
+
+    glMatrixMode(GL_PROJECTION);
+    glTranslatef(0, 0, degrees * 0.001f);
+    glMatrixMode(GL_MODELVIEW);
+
+    updateGL();
+}
+
+// ========================== HELPER FUNCTIONS ========================== //
+
+QVector3D GLWidget::mapPointToTrackball(float x, float y) {
+
+    /* map mouse point (given in xy-plane) to the range of [-1, 1] in both dimensions
+     * note: (0, 0) equals the upper left corner in the mouse coordinates retrieved,
+     *       but OpenGL considers (0, 0) to be the lower left corner. Thus, the y-axis
+     *       is inverted here.
+     */
+    QPointF newPoint ((2 * x - width()) / (float) width(), (-1) * (2 * y - height()) / (float) height());
+
+    // treat this point as point on a unit hemisphere -> calculate corresponding z-value and normalize the vector
+    float squaredDistanceFromOrigin2D = newPoint.x() * newPoint.x() + newPoint.y() * newPoint.y();
+
+    // determine whether to map z to the sphere or the hyperbolic sheet
+    float z = 0.0f;
+    float radius = 1.0f;
+    if (squaredDistanceFromOrigin2D < radius * radius / 2) {
+        z = sqrt(radius * radius - squaredDistanceFromOrigin2D);
+    } else {
+        z = radius * radius / 2 / sqrt(squaredDistanceFromOrigin2D);
+    }
+
+    QVector3D newVector (newPoint.x(), newPoint.y(), z);
+    newVector.normalize();
+
+    return newVector;
+}
 
 
 void GLWidget::setWireframeShading()
