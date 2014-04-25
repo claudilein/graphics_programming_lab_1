@@ -34,7 +34,9 @@ protected:
 
 private:
     int tesselationSteps;
+    std::vector<std::vector<float> > originalVertices;
     std::vector<std::vector<float> > vertices;
+    std::vector<std::vector<float> > colors;
 
 };
 

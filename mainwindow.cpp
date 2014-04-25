@@ -19,10 +19,10 @@ MainWindow::MainWindow(QWidget *parent)
     glWidget = new GLWidget();
     setCentralWidget(glWidget);
 
-
     slider = new QSlider();
     slider->setOrientation(Qt::Horizontal);
     slider->setFixedWidth(80);
+    slider->setRange(1, 50);
     connect(slider, SIGNAL(valueChanged(int)), glWidget, SLOT(setTesselation(int)));
 
     // == FILE MENU == //

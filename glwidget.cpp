@@ -1,54 +1,80 @@
 #include "glwidget.h"
 #include "GL/glu.h"
+#include <iostream>
+#include <math.h>
+
+using namespace std;
 
 GLWidget::GLWidget(QWidget *parent) :
     QGLWidget(parent)
 {
-    tesselationSteps = 0;
+    tesselationSteps = 1;
 
     // set cube vertices
+    float x = 0.5f;
 
-//    vertices.push_back();
+    float position0[3] = {-x, -x, +x};
+    float position1[3] = {+x, -x, +x};
+    float position2[3] = {+x, -x, -x};
+    float position3[3] = {-x, -x, -x};
+    float position4[3] = {-x, +x, +x};
+    float position5[3] = {+x, +x, +x};
+    float position6[3] = {+x, +x, -x};
+    float position7[3] = {-x, +x, -x};
 
-//    glVertex3f(-0.5f, -0.5f, +0.5f);
-//    glVertex3f(+0.5f, -0.5f, +0.5f);
-//    glVertex3f(+0.5f, +0.5f, +0.5f);
-//    glVertex3f(-0.5f, +0.5f, +0.5f);
+    // front
+    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
+    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
+    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
+    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
 
-//    // right
-//    glColor3f(0, 1, 0);
-//    glVertex3f(+0.5f, -0.5f, +0.5f);
-//    glVertex3f(+0.5f, -0.5f, -0.5f);
-//    glVertex3f(+0.5f, +0.5f, -0.5f);
-//    glVertex3f(+0.5f, +0.5f, +0.5f);
+    // right
+    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
+    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
+    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
+    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
 
-//    // back
-//    glColor3f(1, 1, 0);
-//    glVertex3f(+0.5f, -0.5f, -0.5f);
-//    glVertex3f(-0.5f, -0.5f, -0.5f);
-//    glVertex3f(-0.5f, +0.5f, -0.5f);
-//    glVertex3f(+0.5f, +0.5f, -0.5f);
+    // back
+    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
+    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
+    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
+    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
 
-//    // left
-//    glColor3f(0, 1, 1);
-//    glVertex3f(-0.5f, -0.5f, -0.5f);
-//    glVertex3f(-0.5f, -0.5f, +0.5f);
-//    glVertex3f(-0.5f, +0.5f, +0.5f);
-//    glVertex3f(-0.5f, +0.5f, -0.5f);
+    // left
+    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
+    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
+    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
+    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
 
-//    // top
-//    glColor3f(1, 0, 0);
-//    glVertex3f(-0.5f, +0.5f, +0.5f);
-//    glVertex3f(+0.5f, +0.5f, +0.5f);
-//    glVertex3f(+0.5f, +0.5f, -0.5f);
-//    glVertex3f(-0.5f, +0.5f, -0.5f);
+    // bottom
+    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
+    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
+    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
+    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
 
-//    // bottom
-//    glColor3f(1, 0, 1);
-//    glVertex3f(-0.5f, -0.5f, +0.5f);
-//    glVertex3f(+0.5f, -0.5f, +0.5f);
-//    glVertex3f(+0.5f, -0.5f, -0.5f);
-//    glVertex3f(-0.5f, -0.5f, -0.5f);
+    // top
+    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
+    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
+    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
+    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
+
+    vertices = originalVertices;
+
+    // set cube colors
+    float color0[3] = {0, 0, 1};
+    float color1[3] = {1, 0, 0};
+    float color2[3] = {1, 1, 0};
+    float color3[3] = {0, 1, 1};
+    float color4[3] = {1, 0, 1};
+    float color5[3] = {0, 1, 0};
+
+    colors.push_back(std::vector<float> (color0, color0 + 3));
+    colors.push_back(std::vector<float> (color1, color1 + 3));
+    colors.push_back(std::vector<float> (color2, color2 + 3));
+    colors.push_back(std::vector<float> (color3, color3 + 3));
+    colors.push_back(std::vector<float> (color4, color4 + 3));
+    colors.push_back(std::vector<float> (color5, color5 + 3));
+
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -102,52 +128,14 @@ void GLWidget::paintGL()
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
     glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR);
 
-    for (int i = 0; i < tesselationSteps; i++) {
-        // interpoliere zwischen jeweiligen Eckpunkten
 
+    int nrVerticesSameColor = 4 * tesselationSteps * tesselationSteps;
+
+    for (int i = 0; i < vertices.size(); i++) {
+        if (i % nrVerticesSameColor == 0) glColor3f(colors[i / nrVerticesSameColor][0], colors[i / nrVerticesSameColor][1], colors[i / nrVerticesSameColor][2]);
+        glVertex3f(vertices[i][0], vertices[i][1], vertices[i][2]);
     }
 
-    // front
-    glColor3f(0, 0, 1);
-    glVertex3f(-0.5f, -0.5f, +0.5f);
-    glVertex3f(+0.5f, -0.5f, +0.5f);
-    glVertex3f(+0.5f, +0.5f, +0.5f);
-    glVertex3f(-0.5f, +0.5f, +0.5f);
-
-    // right
-    glColor3f(0, 1, 0);
-    glVertex3f(+0.5f, -0.5f, +0.5f);
-    glVertex3f(+0.5f, -0.5f, -0.5f);
-    glVertex3f(+0.5f, +0.5f, -0.5f);
-    glVertex3f(+0.5f, +0.5f, +0.5f);
-
-    // back
-    glColor3f(1, 1, 0);
-    glVertex3f(+0.5f, -0.5f, -0.5f);
-    glVertex3f(-0.5f, -0.5f, -0.5f);
-    glVertex3f(-0.5f, +0.5f, -0.5f);
-    glVertex3f(+0.5f, +0.5f, -0.5f);
-
-    // left
-    glColor3f(0, 1, 1);
-    glVertex3f(-0.5f, -0.5f, -0.5f);
-    glVertex3f(-0.5f, -0.5f, +0.5f);
-    glVertex3f(-0.5f, +0.5f, +0.5f);
-    glVertex3f(-0.5f, +0.5f, -0.5f);
-
-    // top
-    glColor3f(1, 0, 0);
-    glVertex3f(-0.5f, +0.5f, +0.5f);
-    glVertex3f(+0.5f, +0.5f, +0.5f);
-    glVertex3f(+0.5f, +0.5f, -0.5f);
-    glVertex3f(-0.5f, +0.5f, -0.5f);
-
-    // bottom
-    glColor3f(1, 0, 1);
-    glVertex3f(-0.5f, -0.5f, +0.5f);
-    glVertex3f(+0.5f, -0.5f, +0.5f);
-    glVertex3f(+0.5f, -0.5f, -0.5f);
-    glVertex3f(-0.5f, -0.5f, -0.5f);
 
     glEnd();
 
@@ -205,9 +193,70 @@ void GLWidget::setPhongShading()
     updateGL();
 }
 
-// range of t: [0, 20] (subdivision steps)
+// range of t: [0, 50] (subdivision steps)
 void GLWidget::setTesselation(int t)
 {
     tesselationSteps = t;
+
+    std::vector<std::vector<float> > newVertices;
+
+    // for each quad
+    for (int quad = 0; quad < originalVertices.size() / 4; quad++) {
+        // the vertices of a quads is listed counterclockwise, starting at the lower left corner
+        int lowerLeftCorner = quad * 4;
+        float stepSize[3] = {0, 0, 0};
+
+        for (int d = 0; d < 3; d++) {
+            if (originalVertices[lowerLeftCorner][d] != originalVertices[lowerLeftCorner + 2][d]) {
+                stepSize[d] = (fabs(originalVertices[lowerLeftCorner][d]) + fabs(originalVertices[lowerLeftCorner + 2][d])) / t;
+            }
+        }
+
+        std::vector<float> lowerLeftVertex = originalVertices[lowerLeftCorner];
+
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < t; j++) {
+                if (stepSize[0] == 0) {  // in case the quad is in the zy plane
+                    float position0[3] = {lowerLeftVertex[0], lowerLeftVertex[1], lowerLeftVertex[2]};
+                    float position1[3] = {lowerLeftVertex[0], lowerLeftVertex[1], lowerLeftVertex[2] + stepSize[2]};
+                    float position2[3] = {lowerLeftVertex[0], lowerLeftVertex[1] + stepSize[1], lowerLeftVertex[2] + stepSize[2]};
+                    float position3[3] = {lowerLeftVertex[0], lowerLeftVertex[1] + stepSize[1], lowerLeftVertex[2]};
+
+                    // insert new quad into vertices list
+                    newVertices.push_back(std::vector<float> (position0, position0 + 3));
+                    newVertices.push_back(std::vector<float> (position1, position1 + 3));
+                    newVertices.push_back(std::vector<float> (position2, position2 + 3));
+                    newVertices.push_back(std::vector<float> (position3, position3 + 3));
+                } else if (stepSize[1] == 0) {  // in case the quad is in the xz plane
+                    float position0[3] = {lowerLeftVertex[0], lowerLeftVertex[1], lowerLeftVertex[2]};
+                    float position1[3] = {lowerLeftVertex[0] + stepSize[0], lowerLeftVertex[1], lowerLeftVertex[2]};
+                    float position2[3] = {lowerLeftVertex[0] + stepSize[0], lowerLeftVertex[1], lowerLeftVertex[2] + stepSize[2]};
+                    float position3[3] = {lowerLeftVertex[0], lowerLeftVertex[1], lowerLeftVertex[2] + stepSize[2]};
+
+                    // insert new quad into vertices list
+                    newVertices.push_back(std::vector<float> (position0, position0 + 3));
+                    newVertices.push_back(std::vector<float> (position1, position1 + 3));
+                    newVertices.push_back(std::vector<float> (position2, position2 + 3));
+                    newVertices.push_back(std::vector<float> (position3, position3 + 3));
+                } else if (stepSize[2] == 0) {  // in case the quad is in the xy plane
+                    float position0[3] = {lowerLeftVertex[0], lowerLeftVertex[1], lowerLeftVertex[2]};
+                    float position1[3] = {lowerLeftVertex[0] + stepSize[0], lowerLeftVertex[1], lowerLeftVertex[2]};
+                    float position2[3] = {lowerLeftVertex[0] + stepSize[0], lowerLeftVertex[1] + stepSize[1], lowerLeftVertex[2]};
+                    float position3[3] = {lowerLeftVertex[0], lowerLeftVertex[1] + stepSize[1], lowerLeftVertex[2]};
+
+                    // insert new quad into vertices list
+                    newVertices.push_back(std::vector<float> (position0, position0 + 3));
+                    newVertices.push_back(std::vector<float> (position1, position1 + 3));
+                    newVertices.push_back(std::vector<float> (position2, position2 + 3));
+                    newVertices.push_back(std::vector<float> (position3, position3 + 3));
+                }
+                lowerLeftVertex = newVertices[quad * (t * t * 4) + i * (t * 4) + j * 4 + 1];
+            }
+            lowerLeftVertex = newVertices[quad * (t * t * 4) + i * (t * 4) + 3];
+        }
+    }
+
+    vertices = newVertices;
+
     updateGL();
 }
