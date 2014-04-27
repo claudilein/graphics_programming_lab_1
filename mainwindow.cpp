@@ -79,6 +79,18 @@ MainWindow::MainWindow(QWidget *parent)
 
     menuBar->addMenu(shadingMenu);
 
+    // == CAMERA MENU == //
+
+    cameraMenu = new QMenu("&Camera");
+
+    resetCameraAction = new QAction("&Reset Camera", cameraMenu);
+    resetCameraAction->setShortcut(tr("Ctrl+R"));
+    resetCameraAction->setIcon(QIcon(":/img/cam_home.png"));
+    connect(resetCameraAction, SIGNAL(triggered()), glWidget, SLOT(resetCamera()));
+
+    cameraMenu->addAction(resetCameraAction);
+    menuBar->addMenu(cameraMenu);
+
     // == ABOUT ACTION == //
 
     aboutAction = new QAction("&About", menuBar);
@@ -93,6 +105,7 @@ MainWindow::MainWindow(QWidget *parent)
     toolBar->addAction(gouraudShadingAction);
     toolBar->addAction(phongShadingAction);
     toolBar->addWidget(slider);
+    toolBar->addAction(resetCameraAction);
 
 
 }

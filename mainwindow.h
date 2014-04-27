@@ -40,6 +40,10 @@ private:
     QAction *gouraudShadingAction;
     QAction *phongShadingAction;
 
+    // == CAMERA MENU == //
+    QMenu *cameraMenu;
+    QAction *resetCameraAction;
+
     // == ABOUT ACTION == //
     QAction *aboutAction;
 };

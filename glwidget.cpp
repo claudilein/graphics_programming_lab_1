@@ -5,6 +5,8 @@
 #include <QPointF>
 #include <QVector3D>
 #include <QMatrix4x4>
+#include <QCoreApplication>
+#include <QDir>
 
 using namespace std;
 
@@ -78,6 +80,11 @@ GLWidget::GLWidget(QWidget *parent) :
     colors.push_back(std::vector<float> (color4, color4 + 3));
     colors.push_back(std::vector<float> (color5, color5 + 3));
 
+    // constructs an identity quaternion
+    currentRotation = QQuaternion();
+
+
+
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -108,6 +115,18 @@ void GLWidget::initializeGL()
     glEnable(GL_LIGHT0);
 
 
+    shaderProgram = new QGLShaderProgram(this);
+
+    vertexShader = new QGLShader(QGLShader::Vertex, this);
+    fragmentShader = new QGLShader(QGLShader::Fragment, this);
+
+    vertexShader->compileSourceFile("../hellocube/shaders/vertexShader.vertexShader");
+    fragmentShader->compileSourceFile("../hellocube/shaders/fragmentShader.fragmentShader");
+
+    shaderProgram->addShader(vertexShader);
+    shaderProgram->addShader(fragmentShader);
+    shaderProgram->link();
+
 }
 
 void GLWidget::paintGL()
@@ -115,32 +134,72 @@ void GLWidget::paintGL()
     glClearColor(0, 0.5, 0.5, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // draw a cube
-
-    glBegin(GL_QUADS);
 
     // set material properties for the cube
-    float diffuseReflection[4] = {0.5, 0.5, 0.5, 1.0};
-    float specularReflection[4] = {0.7, 0.3, 0.7, 1.0};
+    float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
     int shininess = 66.0f;
 
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuseReflection);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
     glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
 
-    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-    glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR);
+    float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
+//    float currentModelView[16];
+//    glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
+//    QMatrix4x4 mv (currentModelView);
+//    QVector4D lightPos (0.5, 0.0, 2.0, 1.0);
+//    lightPos = mv.inverted() * lightPos;
+//    float blaa[4] = {lightPos.x(), lightPos.y(), lightPos.z(), lightPos.w()};
+
+    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
 
 
     int nrVerticesSameColor = 4 * tesselationSteps * tesselationSteps;
 
+    glBegin(GL_QUADS);
+
     for (int i = 0; i < vertices.size(); i++) {
-        if (i % nrVerticesSameColor == 0) glColor3f(colors[i / nrVerticesSameColor][0], colors[i / nrVerticesSameColor][1], colors[i / nrVerticesSameColor][2]);
+        if (i % nrVerticesSameColor == 0) {
+            glColor3f(colors[i / nrVerticesSameColor][0], colors[i / nrVerticesSameColor][1], colors[i / nrVerticesSameColor][2]);
+        }
         glVertex3f(vertices[i][0], vertices[i][1], vertices[i][2]);
     }
 
-
     glEnd();
+
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//    // diffuse colors
+//       GLfloat colorRed[4] = {1.0, 0.0, 0.0, 1.0};
+//       GLfloat colorGreen[4] = {0.0, 1.0, 0.0, 1.0};
+//       GLfloat colorBlue[4] = {0.0, 0.0, 1.0, 1.0};
+//       GLfloat colorCyan[4] = {0.0, 1.0, 1.0, 1.0};
+//       GLfloat colorMagenta[4] = {1.0, 0.0, 1.0, 1.0};
+//       GLfloat colorYellow[4] = {1.0, 1.0, 0.0, 1.0};
+
+//       // specular color
+//       GLfloat colorSpecular[4] = {1.0, 1.0, 1.0, 1.0};
+
+//       glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, colorSpecular);
+//       glMaterialf(GL_FRONT, GL_SHININESS, 128.0);
+
+//    // draw a cube
+
+//    glBegin(GL_QUADS);
+
+//    glColor3f(1,0,0);
+//    glVertex3f(0,0,0);
+//    glVertex3f(1,0,0);
+//    glVertex3f(1,1,0);
+//    glVertex3f(0,1,0);
+
+//glColor3f(0,1,0);
+//    glVertex3f(0,0,0);
+//    glVertex3f(-1,0,0);
+//    glVertex3f(-1,1,0);
+//    glVertex3f(0,1,0);
+
+
+
+//    glEnd();
 
 }
 
@@ -151,57 +210,86 @@ void GLWidget::resizeGL(int width, int height)
     // set projection matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 10.0d);
+    if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 10.0d);
+    else gluPerspective(45.0d, 0.0d, 0.01d, 10.0d);
 
-    // set view matrix
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(2, 2, 3, 0, 0, 0, 0, 1, 0);
+    resetCamera();
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-    lastVector = mapPointToTrackball(event->x(), event->y());
-    currentRotation = QQuaternion (0, 0, 0, 1);
+    if (event->button() == Qt::RightButton) {
+        lastTranslationPoint = QVector2D(event->x(), event->y());
+    } else if (event->button() == Qt::LeftButton) {
+        lastVector = mapPointToTrackball(event->x(), event->y());
+    }
 
     updateGL();
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    QVector3D newVector = mapPointToTrackball(event->x(), event->y());
+    if ((event->buttons() & Qt::RightButton) == Qt::RightButton) {
 
-    cout << "x: " << newVector.x() << ", y: " << newVector.y() << ", z: " << newVector.z() <<  endl;
+        QVector2D newPoint = QVector2D(event->x(), event->y());
+        float diffX = newPoint.x() - lastTranslationPoint.x();
+        // Qt has an inverted y-axis compared to OpenGL
+        float diffY = lastTranslationPoint.y() - newPoint.y();
 
-    // calculate direction to last point and construct vector that is perpendicular to the plane spanned by the two vectors
-    QVector3D normal;
-    normal = QVector3D::normal(newVector, lastVector);
+        glMatrixMode(GL_PROJECTION);
+        glTranslatef(diffX * 0.01 , diffY * 0.01, 0);
+        lastTranslationPoint = newPoint;
 
-    // convert the distance between the two points to a number of degrees for the rotation
-    float degrees = acosf(QVector3D::dotProduct(newVector, lastVector)) / 180;
+    } else if ((event->buttons() & Qt::LeftButton) == Qt::LeftButton) {
 
-    cout << "degrees: " << degrees << endl;
+        QVector3D newVector = mapPointToTrackball(event->x(), event->y());
 
-    // create quaternion from the axis and the angle
-    QQuaternion rotation (degrees, normal);
+        cout << "x: " << newVector.x() << ", y: " << newVector.y() << ", z: " << newVector.z() <<  endl;
 
-    // multiply with previous quaternion to add rotations
-    rotation = rotation * currentRotation;
-    currentRotation = rotation;
+        // calculate direction to last point and construct vector that is perpendicular to the plane spanned by the two vectors
+        QVector3D normal;
+        normal = QVector3D::crossProduct(lastVector, newVector);
 
-    // when mouse button released: transform quaternion to matrix and apply to modelview matrix
-    QMatrix4x4 rotationMatrix;
-    rotationMatrix.rotate(rotation);
 
-//    float currentModelView[16];
-//    glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(2, 2, 3, 0, 0, 0, 0, 1, 0);
-    glMultMatrixf(rotationMatrix.constData());
+        float currentModelView[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
+        QMatrix4x4 mv (currentModelView);
+        /* transform the normal with the current rotation, so that the rotation of the cube is not
+         * performed in the cube's coordinate system, but instead in the standard coordinate system. */
+        normal = mv * normal;
 
-    // set this point as last point
-    lastVector = newVector;
+        /* convert the distance between the two points to a number of degrees for the rotation
+         * The factor of 100 was chosen through testing and does not have a special meaning. */
+        float degrees = acosf(QVector3D::dotProduct(newVector, lastVector)) * 180 / M_PI;
+
+        cout << "degrees: " << degrees << endl;
+
+        // create quaternion from the axis and the angle
+        QQuaternion rotation (degrees, normal);
+        rotation.normalize();
+
+        // multiply with previous quaternion to add rotations
+    //    rotation = rotation * currentRotation;
+    //    currentRotation = rotation;
+
+
+        // when mouse button released: transform quaternion to matrix and apply to modelview matrix
+        QMatrix4x4 rotationMatrix;
+        rotationMatrix.rotate(rotation);
+
+
+        glMatrixMode(GL_MODELVIEW);
+    //    glLoadIdentity();
+    //    gluLookAt(2, 2, 3, 0, 0, 0, 0, 1, 0);
+
+    //    glMultMatrixf(currentModelView);
+        glMultMatrixf(rotationMatrix.constData());
+
+
+        // set this point as last point
+        lastVector = newVector;
+
+    }
 
     updateGL();
 }
@@ -248,9 +336,13 @@ QVector3D GLWidget::mapPointToTrackball(float x, float y) {
 }
 
 
+// ========================== SETTER FUNCTIONS ========================== //
+
+
 void GLWidget::setWireframeShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    shaderProgram->release();
     updateGL();
 }
 
@@ -258,6 +350,7 @@ void GLWidget::setFlatShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glShadeModel(GL_FLAT);
+    shaderProgram->release();
     updateGL();
 }
 
@@ -265,6 +358,7 @@ void GLWidget::setGouraudShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glShadeModel(GL_SMOOTH);
+    shaderProgram->release();
     updateGL();
 }
 
@@ -272,6 +366,7 @@ void GLWidget::setPhongShading()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glShadeModel(GL_SMOOTH);
+    shaderProgram->bind();
     updateGL();
 }
 
@@ -339,6 +434,17 @@ void GLWidget::setTesselation(int t)
     }
 
     vertices = newVertices;
+
+    updateGL();
+}
+
+
+void GLWidget::resetCamera()
+{
+    // set view matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 0, 3, 0, 0, 0, 0, 1, 0);
 
     updateGL();
 }

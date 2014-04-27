@@ -6,6 +6,8 @@
 #include <QWheelEvent>
 #include <QVector3D>
 #include <QMatrix4x4>
+#include <QGLShaderProgram>
+#include <QGLShader>
 
 class GLWidget : public QGLWidget
 {
@@ -25,6 +27,7 @@ public slots:
     void setPhongShading();
 
     void setTesselation(int t);
+    void resetCamera();
 
 protected:
     void initializeGL();
@@ -41,8 +44,13 @@ private:
     std::vector<std::vector<float> > originalVertices;
     std::vector<std::vector<float> > vertices;
     std::vector<std::vector<float> > colors;
+    QVector2D lastTranslationPoint;
     QVector3D lastVector;
     QQuaternion currentRotation;
+
+    QGLShaderProgram *shaderProgram;
+    QGLShader *vertexShader;
+    QGLShader *fragmentShader;
 
 };
 
