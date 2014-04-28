@@ -80,10 +80,13 @@ GLWidget::GLWidget(QWidget *parent) :
     colors.push_back(std::vector<float> (color4, color4 + 3));
     colors.push_back(std::vector<float> (color5, color5 + 3));
 
-    // constructs an identity quaternion
+    // set rotation, zoom and translation to default
     currentRotation = QQuaternion();
+    currentZoom = 0;
+    currentTranslation = QVector2D();
 
-
+    // set radius of the trackball
+    trackballRadius = 1.0f;
 
 }
 
@@ -108,20 +111,30 @@ void GLWidget::initializeGL()
 
     // enable lighting
     glEnable(GL_LIGHTING);
-
-    // TODO directional lightsource (0.0f) or not?
-    float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
     glEnable(GL_LIGHT0);
 
+    // position lightsource
+    float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
 
+    // set material properties for the cube
+    float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
+    int shininess = 120.0f;
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
+    glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+
+    // set clear color
+    glClearColor(0, 0, 0, 1);
+
+    // compile and link shaders
     shaderProgram = new QGLShaderProgram(this);
 
     vertexShader = new QGLShader(QGLShader::Vertex, this);
     fragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    vertexShader->compileSourceFile("../hellocube/shaders/vertexShader.vertexShader");
-    fragmentShader->compileSourceFile("../hellocube/shaders/fragmentShader.fragmentShader");
+    vertexShader->compileSourceFile(":/shaders/vertexShader.vertexShader");
+    fragmentShader->compileSourceFile(":/shaders/fragmentShader.fragmentShader");
 
     shaderProgram->addShader(vertexShader);
     shaderProgram->addShader(fragmentShader);
@@ -131,33 +144,38 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
-    glClearColor(0, 0.5, 0.5, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // ROTATE LIGHTSOURCE
 
-    // set material properties for the cube
-    float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
-    int shininess = 66.0f;
+//    glMatrixMode(GL_MODELVIEW);
+//    glLoadIdentity();
+//    gluLookAt(2, 2, 3 , 0, 0, 0, 0, 1, 0);
+//    QMatrix4x4 inverseRotation;
+//    inverseRotation.rotate(currentRotation);
+//    glMultMatrixf((inverseRotation.inverted()).constData());
 
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
-    glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+    // rotate light source
+//    float positionLight0[4] = {0.0f, 0.0f, 2.0f, 1.0f};
+//    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
 
-    float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
-//    float currentModelView[16];
-//    glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
-//    QMatrix4x4 mv (currentModelView);
-//    QVector4D lightPos (0.5, 0.0, 2.0, 1.0);
-//    lightPos = mv.inverted() * lightPos;
-//    float blaa[4] = {lightPos.x(), lightPos.y(), lightPos.z(), lightPos.w()};
-
-    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    // apply translation and zoom
+    glTranslatef(currentTranslation.x(), currentTranslation.y(), currentZoom);
+    // set view matrix
+    gluLookAt(2, 2, 3 , 0, 0, 0, 0, 1, 0);
+    // apply rotation
+    QMatrix4x4 rotation;
+    rotation.rotate(currentRotation);
+    glMultMatrixf(rotation.constData());
 
 
     int nrVerticesSameColor = 4 * tesselationSteps * tesselationSteps;
 
     glBegin(GL_QUADS);
 
-    for (int i = 0; i < vertices.size(); i++) {
+    for (uint i = 0; i < vertices.size(); i++) {
         if (i % nrVerticesSameColor == 0) {
             glColor3f(colors[i / nrVerticesSameColor][0], colors[i / nrVerticesSameColor][1], colors[i / nrVerticesSameColor][2]);
         }
@@ -165,41 +183,6 @@ void GLWidget::paintGL()
     }
 
     glEnd();
-
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//    // diffuse colors
-//       GLfloat colorRed[4] = {1.0, 0.0, 0.0, 1.0};
-//       GLfloat colorGreen[4] = {0.0, 1.0, 0.0, 1.0};
-//       GLfloat colorBlue[4] = {0.0, 0.0, 1.0, 1.0};
-//       GLfloat colorCyan[4] = {0.0, 1.0, 1.0, 1.0};
-//       GLfloat colorMagenta[4] = {1.0, 0.0, 1.0, 1.0};
-//       GLfloat colorYellow[4] = {1.0, 1.0, 0.0, 1.0};
-
-//       // specular color
-//       GLfloat colorSpecular[4] = {1.0, 1.0, 1.0, 1.0};
-
-//       glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, colorSpecular);
-//       glMaterialf(GL_FRONT, GL_SHININESS, 128.0);
-
-//    // draw a cube
-
-//    glBegin(GL_QUADS);
-
-//    glColor3f(1,0,0);
-//    glVertex3f(0,0,0);
-//    glVertex3f(1,0,0);
-//    glVertex3f(1,1,0);
-//    glVertex3f(0,1,0);
-
-//glColor3f(0,1,0);
-//    glVertex3f(0,0,0);
-//    glVertex3f(-1,0,0);
-//    glVertex3f(-1,1,0);
-//    glVertex3f(0,1,0);
-
-
-
-//    glEnd();
 
 }
 
@@ -212,8 +195,6 @@ void GLWidget::resizeGL(int width, int height)
     glLoadIdentity();
     if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 10.0d);
     else gluPerspective(45.0d, 0.0d, 0.01d, 10.0d);
-
-    resetCamera();
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
@@ -221,7 +202,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::RightButton) {
         lastTranslationPoint = QVector2D(event->x(), event->y());
     } else if (event->button() == Qt::LeftButton) {
-        lastVector = mapPointToTrackball(event->x(), event->y());
+        lastRotationPoint = mapPointToTrackball(event->x(), event->y());
     }
 
     updateGL();
@@ -236,61 +217,37 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         // Qt has an inverted y-axis compared to OpenGL
         float diffY = lastTranslationPoint.y() - newPoint.y();
 
-        glMatrixMode(GL_PROJECTION);
-        glTranslatef(diffX * 0.01 , diffY * 0.01, 0);
+        float scaleFactor = 0.01;
+        currentTranslation += QVector2D(diffX * scaleFactor, diffY * scaleFactor);
         lastTranslationPoint = newPoint;
 
     } else if ((event->buttons() & Qt::LeftButton) == Qt::LeftButton) {
 
-        QVector3D newVector = mapPointToTrackball(event->x(), event->y());
-
-        cout << "x: " << newVector.x() << ", y: " << newVector.y() << ", z: " << newVector.z() <<  endl;
+        QVector3D newPoint = mapPointToTrackball(event->x(), event->y());
 
         // calculate direction to last point and construct vector that is perpendicular to the plane spanned by the two vectors
         QVector3D normal;
-        normal = QVector3D::crossProduct(lastVector, newVector);
+        normal = QVector3D::crossProduct(lastRotationPoint, newPoint);
 
-
+        /* transform the normal with the current rotation */
         float currentModelView[16];
         glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
         QMatrix4x4 mv (currentModelView);
-        /* transform the normal with the current rotation, so that the rotation of the cube is not
-         * performed in the cube's coordinate system, but instead in the standard coordinate system. */
         normal = mv * normal;
 
-        /* convert the distance between the two points to a number of degrees for the rotation
-         * The factor of 100 was chosen through testing and does not have a special meaning. */
-        float degrees = acosf(QVector3D::dotProduct(newVector, lastVector)) * 180 / M_PI;
-
-        cout << "degrees: " << degrees << endl;
+        /* convert the distance between the two points to a number of degrees for the rotation */
+        float degrees = acosf(QVector3D::dotProduct(newPoint, lastRotationPoint)) * 180 / M_PI;
 
         // create quaternion from the axis and the angle
         QQuaternion rotation (degrees, normal);
         rotation.normalize();
 
         // multiply with previous quaternion to add rotations
-    //    rotation = rotation * currentRotation;
-    //    currentRotation = rotation;
+        rotation = currentRotation * rotation;
+        currentRotation = rotation;
 
-
-        // when mouse button released: transform quaternion to matrix and apply to modelview matrix
-        QMatrix4x4 rotationMatrix;
-        rotationMatrix.rotate(rotation);
-
-
-        glMatrixMode(GL_MODELVIEW);
-    //    glLoadIdentity();
-    //    gluLookAt(2, 2, 3, 0, 0, 0, 0, 1, 0);
-
-    //    glMultMatrixf(currentModelView);
-        glMultMatrixf(rotationMatrix.constData());
-
-
-        // set this point as last point
-        lastVector = newVector;
-
+        lastRotationPoint = newPoint;
     }
-
     updateGL();
 }
 
@@ -299,12 +256,14 @@ void GLWidget::wheelEvent(QWheelEvent *event)
     // vertical rotation in wheel degrees
     int degrees = event->angleDelta().y();
 
-    glMatrixMode(GL_PROJECTION);
-    glTranslatef(0, 0, degrees * 0.001f);
-    glMatrixMode(GL_MODELVIEW);
+    currentZoom += degrees * 0.001f;
+    if (currentZoom < -4.5) currentZoom = -4.5;
+    if (currentZoom > 2) currentZoom = 2;
 
     updateGL();
 }
+
+
 
 // ========================== HELPER FUNCTIONS ========================== //
 
@@ -322,18 +281,18 @@ QVector3D GLWidget::mapPointToTrackball(float x, float y) {
 
     // determine whether to map z to the sphere or the hyperbolic sheet
     float z = 0.0f;
-    float radius = 1.0f;
-    if (squaredDistanceFromOrigin2D < radius * radius / 2) {
-        z = sqrt(radius * radius - squaredDistanceFromOrigin2D);
+    if (squaredDistanceFromOrigin2D < trackballRadius * trackballRadius / 2) {
+        z = sqrt(trackballRadius * trackballRadius - squaredDistanceFromOrigin2D);
     } else {
-        z = radius * radius / 2 / sqrt(squaredDistanceFromOrigin2D);
+        z = trackballRadius * trackballRadius / 2 / sqrt(squaredDistanceFromOrigin2D);
     }
 
-    QVector3D newVector (newPoint.x(), newPoint.y(), z);
-    newVector.normalize();
+    QVector3D newPoint3D (newPoint.x(), newPoint.y(), z);
+    newPoint3D.normalize();
 
-    return newVector;
+    return newPoint3D;
 }
+
 
 
 // ========================== SETTER FUNCTIONS ========================== //
@@ -378,8 +337,8 @@ void GLWidget::setTesselation(int t)
     std::vector<std::vector<float> > newVertices;
 
     // for each quad
-    for (int quad = 0; quad < originalVertices.size() / 4; quad++) {
-        // the vertices of a quads is listed counterclockwise, starting at the lower left corner
+    for (uint quad = 0; quad < originalVertices.size() / 4; quad++) {
+        // the vertices of a quad are listed counterclockwise, starting at the lower left corner
         int lowerLeftCorner = quad * 4;
         float stepSize[3] = {0, 0, 0};
 
@@ -441,10 +400,10 @@ void GLWidget::setTesselation(int t)
 
 void GLWidget::resetCamera()
 {
-    // set view matrix
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0, 0, 3, 0, 0, 0, 0, 1, 0);
+    // set rotation, zoom and translation to default
+    currentRotation = QQuaternion();
+    currentZoom = 0;
+    currentTranslation = QVector2D();
 
     updateGL();
 }

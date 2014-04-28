@@ -44,13 +44,19 @@ private:
     std::vector<std::vector<float> > originalVertices;
     std::vector<std::vector<float> > vertices;
     std::vector<std::vector<float> > colors;
+
     QVector2D lastTranslationPoint;
-    QVector3D lastVector;
+    QVector3D lastRotationPoint;
+
     QQuaternion currentRotation;
+    float currentZoom;
+    QVector2D currentTranslation;
 
     QGLShaderProgram *shaderProgram;
     QGLShader *vertexShader;
     QGLShader *fragmentShader;
+
+    float trackballRadius;
 
 };
 
