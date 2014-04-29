@@ -159,6 +159,7 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
+    // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
@@ -175,6 +176,7 @@ void GLWidget::paintGL()
 
     glBegin(GL_QUADS);
 
+    // draw all faces of the cube and set color and normal accordingly
     for (uint i = 0; i < vertices.size(); i++) {
         if (i % nrVerticesSameColor == 0) {
             glColor3f(colors[i / nrVerticesSameColor][0], colors[i / nrVerticesSameColor][1], colors[i / nrVerticesSameColor][2]);
@@ -200,6 +202,7 @@ void GLWidget::resizeGL(int width, int height)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
+    // set the current mouse point for further translation or rotation calculations (in mouseMoveEvent)
     if (event->button() == Qt::RightButton) {
         lastTranslationPoint = QVector2D(event->x(), event->y());
     } else if (event->button() == Qt::LeftButton) {
@@ -216,17 +219,18 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     int y = event->y();
     bool valid = true;
 
+    // only translate or rotate when mouse pointer within the widget
     if (x > width() || y > height() || x < 0 || y < 0) valid = false;
 
     if ((event->buttons() & Qt::RightButton) == Qt::RightButton && valid) {
 
         QVector2D newPoint = QVector2D(x, y);
-        float diffX = newPoint.x() - lastTranslationPoint.x();
+        float dX = newPoint.x() - lastTranslationPoint.x();
         // Qt has an inverted y-axis compared to OpenGL
-        float diffY = lastTranslationPoint.y() - newPoint.y();
+        float dY = lastTranslationPoint.y() - newPoint.y();
 
-        float scaleFactor = 0.01;
-        currentTranslation += QVector2D(diffX * scaleFactor, diffY * scaleFactor);
+        float scaleFactor = -currentZoom * 0.001166;    // this factor was chosen through testing
+        currentTranslation += QVector2D(dX * scaleFactor, dY * scaleFactor);
         lastTranslationPoint = newPoint;
 
     } else if ((event->buttons() & Qt::LeftButton) == Qt::LeftButton && valid) {
@@ -262,9 +266,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 void GLWidget::wheelEvent(QWheelEvent *event)
 {
     // vertical rotation in wheel degrees
-    int degrees = event->angleDelta().y();
+//    int degrees = event->angleDelta().y();
+    int degrees = event->delta();
 
-    currentZoom += degrees * 0.001f;
+    currentZoom += degrees * 0.002f;
     if (currentZoom < -9) currentZoom = -9;
     if (currentZoom > -2) currentZoom = -2;
 
@@ -350,6 +355,7 @@ void GLWidget::setTesselation(int t)
         int lowerLeftCorner = quad * 4;
         float stepSize[3] = {0, 0, 0};
 
+        // determine stepSize by calculating the difference in x- and y- coordinate between two opposite vertices of the quad
         for (int d = 0; d < 3; d++) {
             if (originalVertices[lowerLeftCorner][d] != originalVertices[lowerLeftCorner + 2][d]) {
                 stepSize[d] = (fabs(originalVertices[lowerLeftCorner][d]) + fabs(originalVertices[lowerLeftCorner + 2][d])) / t;
@@ -358,6 +364,7 @@ void GLWidget::setTesselation(int t)
 
         std::vector<float> lowerLeftVertex = originalVertices[lowerLeftCorner];
 
+        // divide each quad into t*2 quads
         for (int i = 0; i < t; i++) {
             for (int j = 0; j < t; j++) {
                 if (stepSize[0] == 0) {  // in case the quad is in the zy plane
@@ -394,8 +401,10 @@ void GLWidget::setTesselation(int t)
                     newVertices.push_back(std::vector<float> (position2, position2 + 3));
                     newVertices.push_back(std::vector<float> (position3, position3 + 3));
                 }
+                // proceed to the next column
                 lowerLeftVertex = newVertices[quad * (t * t * 4) + i * (t * 4) + j * 4 + 1];
             }
+            // proceed to the next row
             lowerLeftVertex = newVertices[quad * (t * t * 4) + i * (t * 4) + 3];
         }
     }
