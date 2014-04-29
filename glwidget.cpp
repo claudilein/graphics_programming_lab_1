@@ -169,7 +169,8 @@ void GLWidget::paintGL()
     // apply rotation
     QMatrix4x4 rotation;
     rotation.rotate(currentRotation);
-    glMultMatrixd(rotation.constData());
+
+    glMultMatrix(rotation.constData());
 
 
     int nrVerticesSameColor = 4 * tesselationSteps * tesselationSteps;
@@ -246,7 +247,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         //glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
         double currentModelView[16];
         glGetDoublev(GL_MODELVIEW_MATRIX, currentModelView);
-        QMatrix4x4 mv (currentModelView);
+        QMatrix4x4 mv (currentModelView[0], currentModelView[1], currentModelView[2], currentModelView[3],
+                       currentModelView[4], currentModelView[5], currentModelView[6], currentModelView[7],
+                       currentModelView[8], currentModelView[9], currentModelView[10], currentModelView[11],
+                       currentModelView[12], currentModelView[13], currentModelView[14], currentModelView[15]);
         normal = mv * normal;
 
         /* convert the distance between the two points to a number of degrees for the rotation */
@@ -308,6 +312,9 @@ QVector3D GLWidget::mapPointToTrackball(float x, float y) {
     return newPoint3D;
 }
 
+
+inline void GLWidget::glMultMatrix(const GLfloat  *m) { glMultMatrixf(m); }
+inline void GLWidget::glMultMatrix(const GLdouble *m) { glMultMatrixd(m); }
 
 
 // ========================== SETTER FUNCTIONS ========================== //
@@ -426,3 +433,5 @@ void GLWidget::resetCamera()
 
     updateGL();
 }
+
+

@@ -38,6 +38,8 @@ protected:
     void wheelEvent(QWheelEvent *event);
 
     QVector3D mapPointToTrackball(float x, float y);
+    inline void glMultMatrix(const GLfloat  *m);
+    inline void glMultMatrix(const GLdouble *m);
 
 private:
     int tesselationSteps;
