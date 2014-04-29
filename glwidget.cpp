@@ -169,7 +169,7 @@ void GLWidget::paintGL()
     // apply rotation
     QMatrix4x4 rotation;
     rotation.rotate(currentRotation);
-    glMultMatrixf(rotation.constData());
+    glMultMatrixd(rotation.constData());
 
 
     int nrVerticesSameColor = 4 * tesselationSteps * tesselationSteps;
@@ -242,8 +242,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         normal = QVector3D::crossProduct(lastRotationPoint, newPoint);
 
         /* transform the normal with the current rotation */
-        float currentModelView[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
+        //float currentModelView[16];
+        //glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
+        double currentModelView[16];
+        glGetDoublev(GL_MODELVIEW_MATRIX, currentModelView);
         QMatrix4x4 mv (currentModelView);
         normal = mv * normal;
 
