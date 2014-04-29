@@ -80,9 +80,24 @@ GLWidget::GLWidget(QWidget *parent) :
     colors.push_back(std::vector<float> (color4, color4 + 3));
     colors.push_back(std::vector<float> (color5, color5 + 3));
 
+    // set cube normals
+    float normal0[3] = {0, 0, 1};
+    float normal1[3] = {1, 0, 0};
+    float normal2[3] = {0, 0, -1};
+    float normal3[3] = {-1, 0, 0};
+    float normal4[3] = {0, -1, 0};
+    float normal5[3] = {0, 1, 0};
+
+    normals.push_back(std::vector<float> (normal0, normal0 + 3));
+    normals.push_back(std::vector<float> (normal1, normal1 + 3));
+    normals.push_back(std::vector<float> (normal2, normal2 + 3));
+    normals.push_back(std::vector<float> (normal3, normal3 + 3));
+    normals.push_back(std::vector<float> (normal4, normal4 + 3));
+    normals.push_back(std::vector<float> (normal5, normal5 + 3));
+
     // set rotation, zoom and translation to default
     currentRotation = QQuaternion();
-    currentZoom = 0;
+    currentZoom = -3;
     currentTranslation = QVector2D();
 
     // set radius of the trackball
@@ -97,7 +112,7 @@ QSize GLWidget::minimumSizeHint() const
 
 QSize GLWidget::sizeHint() const
 {
-    return QSize(400, 400);
+    return QSize(600, 600);
 }
 
 void GLWidget::initializeGL()
@@ -146,25 +161,10 @@ void GLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // ROTATE LIGHTSOURCE
-
-//    glMatrixMode(GL_MODELVIEW);
-//    glLoadIdentity();
-//    gluLookAt(2, 2, 3 , 0, 0, 0, 0, 1, 0);
-//    QMatrix4x4 inverseRotation;
-//    inverseRotation.rotate(currentRotation);
-//    glMultMatrixf((inverseRotation.inverted()).constData());
-
-    // rotate light source
-//    float positionLight0[4] = {0.0f, 0.0f, 2.0f, 1.0f};
-//    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
-
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     // apply translation and zoom
     glTranslatef(currentTranslation.x(), currentTranslation.y(), currentZoom);
-    // set view matrix
-    gluLookAt(2, 2, 3 , 0, 0, 0, 0, 1, 0);
     // apply rotation
     QMatrix4x4 rotation;
     rotation.rotate(currentRotation);
@@ -178,6 +178,7 @@ void GLWidget::paintGL()
     for (uint i = 0; i < vertices.size(); i++) {
         if (i % nrVerticesSameColor == 0) {
             glColor3f(colors[i / nrVerticesSameColor][0], colors[i / nrVerticesSameColor][1], colors[i / nrVerticesSameColor][2]);
+            glNormal3f(normals[i / nrVerticesSameColor][0], normals[i / nrVerticesSameColor][1], normals[i / nrVerticesSameColor][2]);
         }
         glVertex3f(vertices[i][0], vertices[i][1], vertices[i][2]);
     }
@@ -210,9 +211,16 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    if ((event->buttons() & Qt::RightButton) == Qt::RightButton) {
 
-        QVector2D newPoint = QVector2D(event->x(), event->y());
+    int x = event->x();
+    int y = event->y();
+    bool valid = true;
+
+    if (x > width() || y > height() || x < 0 || y < 0) valid = false;
+
+    if ((event->buttons() & Qt::RightButton) == Qt::RightButton && valid) {
+
+        QVector2D newPoint = QVector2D(x, y);
         float diffX = newPoint.x() - lastTranslationPoint.x();
         // Qt has an inverted y-axis compared to OpenGL
         float diffY = lastTranslationPoint.y() - newPoint.y();
@@ -221,9 +229,9 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         currentTranslation += QVector2D(diffX * scaleFactor, diffY * scaleFactor);
         lastTranslationPoint = newPoint;
 
-    } else if ((event->buttons() & Qt::LeftButton) == Qt::LeftButton) {
+    } else if ((event->buttons() & Qt::LeftButton) == Qt::LeftButton && valid) {
 
-        QVector3D newPoint = mapPointToTrackball(event->x(), event->y());
+        QVector3D newPoint = mapPointToTrackball(x, y);
 
         // calculate direction to last point and construct vector that is perpendicular to the plane spanned by the two vectors
         QVector3D normal;
@@ -257,8 +265,8 @@ void GLWidget::wheelEvent(QWheelEvent *event)
     int degrees = event->angleDelta().y();
 
     currentZoom += degrees * 0.001f;
-    if (currentZoom < -4.5) currentZoom = -4.5;
-    if (currentZoom > 2) currentZoom = 2;
+    if (currentZoom < -9) currentZoom = -9;
+    if (currentZoom > -2) currentZoom = -2;
 
     updateGL();
 }
@@ -402,7 +410,7 @@ void GLWidget::resetCamera()
 {
     // set rotation, zoom and translation to default
     currentRotation = QQuaternion();
-    currentZoom = 0;
+    currentZoom = -3;
     currentTranslation = QVector2D();
 
     updateGL();

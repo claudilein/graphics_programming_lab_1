@@ -44,6 +44,7 @@ private:
     std::vector<std::vector<float> > originalVertices;
     std::vector<std::vector<float> > vertices;
     std::vector<std::vector<float> > colors;
+    std::vector<std::vector<float> > normals;
 
     QVector2D lastTranslationPoint;
     QVector3D lastRotationPoint;
