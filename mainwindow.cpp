@@ -91,12 +91,15 @@ MainWindow::MainWindow(QWidget *parent)
     cameraMenu->addAction(resetCameraAction);
     menuBar->addMenu(cameraMenu);
 
-    // == ABOUT ACTION == //
+    // == ABOUT MENU == //
+
+    aboutMenu = new QMenu("&About");
 
     aboutAction = new QAction("&About", menuBar);
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(showAboutBox()));
 
-    menuBar->addAction(aboutAction);
+    aboutMenu->addAction(aboutAction);
+    menuBar->addMenu(aboutMenu);
 
     // == TOOL BAR == //
 

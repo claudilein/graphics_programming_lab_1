@@ -44,7 +44,8 @@ private:
     QMenu *cameraMenu;
     QAction *resetCameraAction;
 
-    // == ABOUT ACTION == //
+    // == ABOUT MENU == //
+    QMenu *aboutMenu;
     QAction *aboutAction;
 };
 
